@@ -1,6 +1,8 @@
 'use strict';
 
 var tahomalink = require('./core/tahomalink');
+var Api = require('./core/overkiz-api').Api;
+
 module.exports = function(RED) {
   function TahomaNode(config) {
     RED.nodes.createNode(this, config);
@@ -117,6 +119,37 @@ module.exports = function(RED) {
 
     var node = this;
     var configNode = RED.nodes.getNode(node.tahomabox);
+
+    var log = {
+      debug: function(s) { console.log(s); },
+      warn: function(s) { console.log(s); },
+      error: function(s) { console.log(s); },
+      log: function(s) { console.log(s); },
+    };
+    var apiConfig = {
+      user: configNode.username,
+      password: configNode.password,
+    };
+    var listener = {
+      onStatesChange: function(deviceURL, states) {
+        console.log(deviceURL, states);
+      },
+    };
+
+    // in parallel try out a different api
+    /* eslint-env es6 */
+    var api = new Api(log, apiConfig);
+    api.setDeviceStateChangedEventListener(listener);
+    api.getDevices(function(error, data) {
+      if (!error) {
+        console.log(data.length + ' device(s) found');
+        for (var device of data) {
+          console.log('device', device);
+        }
+      } else {
+        console.log('error', error);
+      }
+    });
 
     node.on('input', function(msg) {
       tahomalink.login(configNode.username, configNode.password)

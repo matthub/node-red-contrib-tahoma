@@ -1,6 +1,7 @@
 'use strict';
 
 var request = require('request');
+
 var Q = require('q');
 
 var TAHOMA_LINK_BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web';
@@ -37,7 +38,7 @@ var getSetup = function getSetup(options) {
   }, function(err, res, body) {
     if (res.statusCode === 200) {
       deferred.resolve(body);
-    } else if (res.statusCode === 401) {
+    } else if (res.statusCode === 401 && options) {
       setTimeout(function() {
         deferred.resolve(login(options.username, options.password)
           .then(getSetup(options)));
