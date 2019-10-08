@@ -105,7 +105,13 @@ function OverkizApi(log, config) {
   });
 
   this.eventpoll.on('longpoll', function(data) {
-    this.log('longpoll, data: ' + JSON.stringify(data));
+    if (this.log) {
+      this.log.debug('longpoll, data: ' + JSON.stringify(data));
+    } else if (that.log) {
+      that.log.debug('longpoll, data: ' + JSON.stringify(data));
+    } else {
+      console.log('longpoll, data: ' + JSON.stringify(data));
+    }
     for (var event of data) {
       if (event.name === 'DeviceStateChangedEvent') {
         if (that.stateChangedEventListener !== null)
