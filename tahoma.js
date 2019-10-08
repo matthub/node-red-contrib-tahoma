@@ -129,6 +129,7 @@ module.exports = function(RED) {
     var apiConfig = {
       user: configNode.username,
       password: configNode.password,
+      alwaysPoll: true,
     };
     var listener = {
       onStatesChange: function(deviceURL, states) {
@@ -142,11 +143,19 @@ module.exports = function(RED) {
     api.setDeviceStateChangedEventListener(listener);
     api.getDevices(function(error, data) {
       if (!error) {
-        console.log(data.length + ' device(s) found');
+        console.log(node.device + ', ' + data.length + ' device(s) found');
+        /* TODO debug only
         for (var device of data) {
           console.log('device', device);
         }
-      } else {
+        */
+        // filter for device
+        for (var device of data) {
+          if (device == node.device) {
+            console.log('would send message for device ' + node.device, device);
+          }
+        }
+    } else {
         console.log('error', error);
       }
     });

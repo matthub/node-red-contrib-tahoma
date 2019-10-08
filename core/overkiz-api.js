@@ -105,6 +105,7 @@ function OverkizApi(log, config) {
   });
 
   this.eventpoll.on('longpoll', function(data) {
+    this.log('longpoll, data: ' + JSON.stringify(data));
     for (var event of data) {
       if (event.name === 'DeviceStateChangedEvent') {
         if (that.stateChangedEventListener !== null)
@@ -260,6 +261,7 @@ OverkizApi.prototype = {
         } else if (json && json.success) {
           that.isLoggedIn = true;
           myRequest(authCallback);
+          that.log.warn('Unable to login: ' + err);
           if (that.alwaysPoll)
             that.registerListener();
         } else if (json && json.error) {
