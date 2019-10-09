@@ -110,7 +110,7 @@ function OverkizApi(log, config) {
     } else if (that.log) {
       that.log.debug('longpoll, data: ' + JSON.stringify(data));
     } else {
-      console.log('longpoll, data: ' + JSON.stringify(data));
+      console.log(new Date().toISOString(), 'longpoll, data: ' + JSON.stringify(data));
     }
     for (var event of data) {
       if (event.name === 'DeviceStateChangedEvent') {
@@ -267,9 +267,10 @@ OverkizApi.prototype = {
         } else if (json && json.success) {
           that.isLoggedIn = true;
           myRequest(authCallback);
-          that.log.warn('Unable to login: ' + err);
-          if (that.alwaysPoll)
+          if (that.alwaysPoll) {
+            that.log.debug('Logged in, now registering listener');
             that.registerListener();
+          }
         } else if (json && json.error) {
           that.log.warn('Login fail: ' + json.error);
           callback(json.error);
@@ -281,11 +282,26 @@ OverkizApi.prototype = {
     }
   },
 
+  getEvents: function() {
+    var that = this;
+    this.log.debug('Getting events...');
+    this.post({
+      url: that.urlForQuery('/GetEvents'),
+      json: true,
+    }, function(error, data) {
+      if (!error) {
+        that.log.debug('Received events ' + data);
+      } else {
+        that.log.error('Error while getting events ' + data);
+      }
+    });
+  },
+
   registerListener: function() {
     var that = this;
     if (this.listenerId == null) {
       this.listenerId = 0;
-      this.log.debug('Register listener');
+      this.log.debug('Register new listener');
       this.post({
         url: that.urlForQuery('/events/register'),
         json: true,
@@ -293,6 +309,9 @@ OverkizApi.prototype = {
         if (!error) {
           that.listenerId = data.id;
           that.log.debug('Listener registered ' + that.listenerId);
+
+          // getting once the events
+          that.getEvents();
         } else {
           that.listenerId = null;
           that.log.error('Error while registering listener');
