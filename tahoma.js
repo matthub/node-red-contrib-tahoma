@@ -121,10 +121,11 @@ module.exports = function(RED) {
     var configNode = RED.nodes.getNode(node.tahomabox);
 
     var log = {
-      debug: function(s) { console.log(new Date().toISOString(), s); },
-      warn: function(s) { console.log(new Date().toISOString(), s); },
-      error: function(s) { console.log(new Date().toISOString(), s); },
-      log: function(s) { console.log(new Date().toISOString(), s); },
+      debug: function(s) { console.log(new Date().toLocaleString() + ' - [debug]', s); },
+      warn: function(s) { console.log(new Date().toLocaleString() + ' - [warn]', s); },
+      error: function(s) { console.log(new Date().toLocaleString() + ' - [error]', s); },
+      log: function(s) { console.log(new Date().toLocaleString() + ' - [info]', s); },
+      info: function(s) { log(s) },
     };
     var apiConfig = {
       user: configNode.username,

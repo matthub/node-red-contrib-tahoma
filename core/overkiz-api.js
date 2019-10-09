@@ -266,9 +266,10 @@ OverkizApi.prototype = {
           callback(err);
         } else if (json && json.success) {
           that.isLoggedIn = true;
+          that.log.debug('Logged in, always polling? ' + that.alwaysPoll);
           myRequest(authCallback);
           if (that.alwaysPoll) {
-            that.log.debug('Logged in, now registering listener');
+            that.log.debug('Now registering listener');
             that.registerListener();
           }
         } else if (json && json.error) {
