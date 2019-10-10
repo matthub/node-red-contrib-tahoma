@@ -287,13 +287,13 @@ OverkizApi.prototype = {
     var that = this;
     this.log.debug('Getting events...');
     this.post({
-      url: that.urlForQuery('/GetEvents'),
+      url: that.urlForQuery('/getEvents'),
       json: true,
     }, function(error, data) {
       if (!error) {
         that.log.debug('Received events ' + data);
       } else {
-        that.log.error('Error while getting events ' + data);
+        that.log.error('Error while getting events ' + error);
       }
     });
   },
