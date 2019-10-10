@@ -134,7 +134,7 @@ module.exports = function(RED) {
     };
     var listener = {
       onStatesChange: function(deviceURL, states) {
-        console.log(deviceURL, states);
+        log.debug(deviceURL + ": " + JSON.stringify(states));
       },
     };
 
