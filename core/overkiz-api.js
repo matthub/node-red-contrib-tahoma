@@ -271,8 +271,8 @@ OverkizApi.prototype = {
           that.log.debug('Logged in, always polling? ' + that.alwaysPoll);
           myRequest(authCallback);
           if (that.alwaysPoll) {
-            that.log.debug('Now registering listener');
-            that.registerListener();
+            that.log.debug('Now registering global event listener');
+            that.getEvents();
           }
         } else if (json && json.error) {
           that.log.warn('Login fail: ' + json.error);
@@ -314,9 +314,6 @@ OverkizApi.prototype = {
         if (!error) {
           that.listenerId = data.id;
           that.log.debug('Listener registered ' + that.listenerId);
-
-          // getting once the events
-          that.getEvents();
         } else {
           that.listenerId = null;
           that.log.error('Error while registering listener');
