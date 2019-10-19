@@ -91,7 +91,7 @@ function OverkizApi(log, config) {
   this.eventpoll = pollingtoevent(function(done) {
     if (that.isLoggedIn && that.listenerId !== null && that.listenerId !== 0) {
       that.post({
-        url: that.urlForQuery('/events/' + that.listenerId + '/fetch'),
+        url: that.urlForQuery('/enduserAPI/events/' + that.listenerId + '/fetch'),
         json: true,
       }, function(error, data) {
         done(error, data);
@@ -176,7 +176,7 @@ OverkizApi.prototype = {
     if (this.debugUrl) {
       return this.debugUrl + '&query=' + query;
     } else {
-      return 'https://' + this.server + '/enduser-mobile-web/enduserAPI'
+      return 'https://' + this.server + '/enduser-mobile-web'
         + query;
     }
   },
@@ -207,7 +207,7 @@ OverkizApi.prototype = {
 
   getDevices(callback) {
     this.get({
-      url: this.urlForQuery('/setup/devices'),
+      url: this.urlForQuery('/enduserAPI/setup/devices'),
       json: true,
     }, function(error, json) {
       callback(error, json);
@@ -216,7 +216,7 @@ OverkizApi.prototype = {
 
   getActionGroups(callback) {
     this.get({
-      url: this.urlForQuery('/actionGroups'),
+      url: this.urlForQuery('/enduserAPI/actionGroups'),
       json: true,
     }, function(error, json) {
       callback(error, json);
@@ -255,7 +255,7 @@ OverkizApi.prototype = {
       that.listenerId = null;
       that.log.debug('Logging in to ' + this.service + ' server...');
       request.post({
-        url: this.urlForQuery('/login'),
+        url: this.urlForQuery('/enduserAPI/login'),
         form: {
           userId: this.user,
           userPassword: this.password,
@@ -288,8 +288,10 @@ OverkizApi.prototype = {
   getEvents: function() {
     var that = this;
     this.log.debug('Getting events...');
+
+    
     this.post({
-      url: that.urlForQuery('/getEvents'),
+      url: that.urlForQuery('/externalAPI/json/getEvents'),
       json: true,
     }, function(error, data) {
       if (!error) {
@@ -306,7 +308,7 @@ OverkizApi.prototype = {
       this.listenerId = 0;
       this.log.debug('Register new listener');
       this.post({
-        url: that.urlForQuery('/events/register'),
+        url: that.urlForQuery('/enduserAPI/events/register'),
         json: true,
       }, function(error, data) {
         if (!error) {
@@ -328,7 +330,7 @@ OverkizApi.prototype = {
     if (this.listenerId != null) {
       this.log.debug('Unregister listener');
       this.post({
-        url: that.urlForQuery('/events/' + this.listenerId + '/unregister'),
+        url: that.urlForQuery('/enduserAPI/events/' + this.listenerId + '/unregister'),
         json: true,
       }, function(error, data) {
         if (!error) {
@@ -340,7 +342,7 @@ OverkizApi.prototype = {
 
   refreshStates: function(callback) {
     this.put({
-      url: this.urlForQuery('/setup/devices/states/refresh'),
+      url: this.urlForQuery('/enduserAPI/setup/devices/states/refresh'),
       json: true,
     }, function(error, data) {
       callback(error, data);
@@ -350,7 +352,7 @@ OverkizApi.prototype = {
   requestState: function(deviceURL, state, callback) {
     // var that = this;
     this.get({
-      url: this.urlForQuery('/setup/devices/' + encodeURIComponent(deviceURL)
+      url: this.urlForQuery('/enduserAPI/setup/devices/' + encodeURIComponent(deviceURL)
         + '/states/' + encodeURIComponent(state)),
       json: true,
     }, function(error, data) {
@@ -362,7 +364,7 @@ OverkizApi.prototype = {
   cancelCommand: function(execId, callback) {
     // var that = this;
     this.delete({
-      url: this.urlForQuery('/exec/current/setup/' + execId),
+      url: this.urlForQuery('/enduserAPI/exec/current/setup/' + execId),
       json: true,
     }, function(error, json) {
       callback(error);
@@ -391,7 +393,7 @@ OverkizApi.prototype = {
     var that = this;
     // this.log(command);
     this.post({
-      url: that.urlForQuery('/exec/' + oid),
+      url: that.urlForQuery('/enduserAPI/exec/' + oid),
       // headers: {'User-Agent': 'TaHoma iPhone'},
       body: execution,
       json: true,
