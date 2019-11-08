@@ -289,7 +289,7 @@ OverkizApi.prototype = {
     var that = this;
     this.log.debug('Getting events...');
 
-    
+
     this.post({
       url: that.urlForQuery('/externalAPI/json/getEvents'),
       json: true,

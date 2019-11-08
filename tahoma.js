@@ -125,7 +125,7 @@ module.exports = function(RED) {
       warn: function(s) { console.log(new Date().toLocaleString() + ' - [warn]', s); },
       error: function(s) { console.log(new Date().toLocaleString() + ' - [error]', s); },
       log: function(s) { console.log(new Date().toLocaleString() + ' - [info]', s); },
-      info: function(s) { log(s) },
+      info: function(s) { console.log(new Date().toLocaleString() + ' - [info]', s); },
     };
     var apiConfig = {
       user: configNode.username,
@@ -134,7 +134,7 @@ module.exports = function(RED) {
     };
     var listener = {
       onStatesChange: function(deviceURL, states) {
-        log.debug(deviceURL + ": " + JSON.stringify(states));
+        log.debug(deviceURL + ': ' + JSON.stringify(states));
       },
     };
 
@@ -155,12 +155,12 @@ module.exports = function(RED) {
         // filter for device
         for (var device of data) {
           if (device == node.device) {
-            log.debug('would send message for device ' + node.device + ", " + device);
+            log.debug('would send message for device ' + node.device + ', ' + device);
           }
         }
       } else {
         // handle too many requests
-        if (error != null && error.indexOf("Too many requests") > -1) {
+        if (error != null && error.indexOf('Too many requests') > -1) {
           // adding some random timeout value before retrying
           timeout = timeout + Math.floor(Math.random() * Math.floor(1000));
           log.warn('retrying get devices in ' + timeout + 'ms...');
