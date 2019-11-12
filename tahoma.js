@@ -121,11 +121,21 @@ module.exports = function(RED) {
     var configNode = RED.nodes.getNode(node.tahomabox);
 
     var log = {
-      debug: function(s) { console.log(new Date().toLocaleString() + ' - [debug]', s); },
-      warn: function(s) { console.log(new Date().toLocaleString() + ' - [warn]', s); },
-      error: function(s) { console.log(new Date().toLocaleString() + ' - [error]', s); },
-      log: function(s) { console.log(new Date().toLocaleString() + ' - [info]', s); },
-      info: function(s) { console.log(new Date().toLocaleString() + ' - [info]', s); },
+      debug: function(s) {
+        console.log(new Date().toLocaleString() + ' - [debug]', s);
+      },
+      warn: function(s) {
+        console.log(new Date().toLocaleString() + ' - [warn]', s);
+      },
+      error: function(s) {
+        console.log(new Date().toLocaleString() + ' - [error]', s);
+      },
+      log: function(s) {
+        console.log(new Date().toLocaleString() + ' - [info]', s);
+      },
+      info: function(s) {
+        console.log(new Date().toLocaleString() + ' - [info]', s);
+      },
     };
     var apiConfig = {
       user: configNode.username,
@@ -154,8 +164,9 @@ module.exports = function(RED) {
         */
         // filter for device
         for (var device of data) {
-          if (device == node.device) {
-            log.debug('would send message for device ' + node.device + ', ' + device);
+          if (device === node.device) {
+            log.debug('would send message for device '
+              + node.device + ', ' + device);
           }
         }
       } else {
