@@ -208,7 +208,7 @@ OverkizApi.prototype = {
   },
 
   getDevices(callback) {
-    console.log('getDevices.this:', this);
+    console.log('getDevices.this is available?', (this != null));
     if (this && this.urlForQuery) {
       this.get({
         url: this.urlForQuery('/enduserAPI/setup/devices'),
