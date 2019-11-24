@@ -66,8 +66,8 @@ function OverkizApi(log, config) {
   // Default values
   this.debugUrl = config['debugUrl'] || false;
   this.alwaysPoll = config['alwaysPoll'] || false;
-  // Poll for events every 2 seconds by default
-  this.pollingPeriod = config['pollingPeriod'] || 2;
+  // Poll for events every 10 seconds by default
+  this.pollingPeriod = config['pollingPeriod'] || 10;
   // Refresh device states every 30 minutes by default
   this.refreshPeriod = config['refreshPeriod'] || (60 * 30);
   this.service = config['service'] || 'TaHoma';
@@ -89,6 +89,19 @@ function OverkizApi(log, config) {
 
   var that = this;
   this.eventpoll = pollingtoevent(function(done) {
+    // now using the generic GetEvents instead of a registered listener
+    if (that.isLoggedIn) {
+      that.post({
+        url: that.urlForQuery('/externalAPI/json/getEvents'),
+        json: true,
+      }, function(error, data) {
+        done(error, data);
+      });
+    } else {
+      done(null, []);
+    }
+
+    /* old
     if (that.isLoggedIn && that.listenerId !== null && that.listenerId !== 0) {
       that.post({
         url: that.urlForQuery('/enduserAPI/events/'
@@ -100,6 +113,7 @@ function OverkizApi(log, config) {
     } else {
       done(null, []);
     }
+    */
   }, {
     longpolling: true,
     interval: (1000 * this.pollingPeriod),
@@ -278,10 +292,6 @@ OverkizApi.prototype = {
           that.isLoggedIn = true;
           that.log.debug('Logged in, always polling? ' + that.alwaysPoll);
           myRequest(authCallback);
-          if (that.alwaysPoll) {
-            that.log.debug('Now registering global event listener');
-            that.getEvents();
-          }
         } else if (json && json.error) {
           that.log.warn('Login fail: ' + json.error);
           callback(json.error);
@@ -297,7 +307,6 @@ OverkizApi.prototype = {
     var that = this;
     this.log.debug('Getting events...');
 
-
     this.post({
       url: that.urlForQuery('/externalAPI/json/getEvents'),
       json: true,
@@ -305,7 +314,8 @@ OverkizApi.prototype = {
       if (!error) {
         that.log.debug('Received events ' + data);
       } else {
-        that.log.error('Error while getting events ' + error);
+        that.log.error('Error while getting events ' + error
+          + ', data ' + JSON.stringify(data));
       }
     });
   },
