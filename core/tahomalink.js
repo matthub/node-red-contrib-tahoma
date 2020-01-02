@@ -50,7 +50,8 @@ var login = function login(username, password) {
     return deferred.promise;
   }
   global.state = STATE_LOGGING_IN;
-  log.debug('login attempt for user ' + username + ' to ' + TAHOMA_LINK_BASE_URL + '...');
+  log.debug('login attempt for user ' + username + ' to '
+    + TAHOMA_LINK_BASE_URL + '...');
 
   request({
     url: TAHOMA_LINK_BASE_URL + '/login',
