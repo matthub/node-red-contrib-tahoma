@@ -1,24 +1,26 @@
 'use strict';
 
 var request = require('request');
+var util = require('util');
 
 var Q = require('q');
 
 var log = {
+  component: '[tahomalink]',
   debug: function(s) {
-    console.log(new Date().toLocaleString() + ' - [debug]', s);
+    util.log('[debug] ' + log.component, s);
   },
   warn: function(s) {
-    console.log(new Date().toLocaleString() + ' - [warn]', s);
+    util.log('[warn] ' + log.component, s);
   },
   error: function(s) {
-    console.log(new Date().toLocaleString() + ' - [error]', s);
+    util.log('[error] ' + log.component, s);
   },
   log: function(s) {
-    console.log(new Date().toLocaleString() + ' - [info]', s);
+    util.log('[info] ' + log.component, s);
   },
   info: function(s) {
-    console.log(new Date().toLocaleString() + ' - [info]', s);
+    util.log('[info] ' + log.component, s);
   },
 };
 
@@ -48,7 +50,7 @@ var login = function login(username, password) {
     return deferred.promise;
   }
   global.state = STATE_LOGGING_IN;
-  log.debug('login at ' + TAHOMA_LINK_BASE_URL + '...');
+  log.debug('login attempt for user ' + username + ' to ' + TAHOMA_LINK_BASE_URL + '...');
 
   request({
     url: TAHOMA_LINK_BASE_URL + '/login',
@@ -208,4 +210,5 @@ module.exports = {
   execute: execute,
   getDeviceState: getDeviceState,
   continueWhenFinished: continueWhenFinished,
+  log: log,
 };

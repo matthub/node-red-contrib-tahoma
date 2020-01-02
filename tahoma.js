@@ -1,7 +1,7 @@
 'use strict';
 
 var tahomalink = require('./core/tahomalink');
-var Api = require('./core/overkiz-api').Api;
+// var Api = require('./core/overkiz-api').Api;
 
 module.exports = function(RED) {
   function TahomaNode(config) {
@@ -120,23 +120,11 @@ module.exports = function(RED) {
     var node = this;
     var configNode = RED.nodes.getNode(node.tahomabox);
 
-    var log = {
-      debug: function(s) {
-        console.log(new Date().toLocaleString() + ' - [debug]', s);
-      },
-      warn: function(s) {
-        console.log(new Date().toLocaleString() + ' - [warn]', s);
-      },
-      error: function(s) {
-        console.log(new Date().toLocaleString() + ' - [error]', s);
-      },
-      log: function(s) {
-        console.log(new Date().toLocaleString() + ' - [info]', s);
-      },
-      info: function(s) {
-        console.log(new Date().toLocaleString() + ' - [info]', s);
-      },
-    };
+    // in parallel try out a different api
+    /* eslint-env es6 */
+
+    /*
+    var log = tahomalink.log;
     var apiConfig = {
       user: configNode.username,
       password: configNode.password,
@@ -148,8 +136,6 @@ module.exports = function(RED) {
       },
     };
 
-    // in parallel try out a different api
-    /* eslint-env es6 */
     var timeout = 2000;
     var api = new Api(log, apiConfig);
     api.setDeviceStateChangedEventListener(listener);
@@ -157,11 +143,11 @@ module.exports = function(RED) {
     var getDevicesCallback = function(error, data) {
       if (!error) {
         log.info(node.device + ', ' + data.length + ' device(s) found');
-        /* TODO debug only
-        for (var device of data) {
-          console.log('device', device);
-        }
-        */
+        // TODO debug only
+        // for (var device of data) {
+        //  console.log('device', device);
+        // }
+
         // filter for device
         for (var device of data) {
           if (device === node.device) {
@@ -182,6 +168,7 @@ module.exports = function(RED) {
       }
     };
     api.getDevices(getDevicesCallback);
+    */
 
     node.on('input', function(msg) {
       tahomalink.login(configNode.username, configNode.password)
