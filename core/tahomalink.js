@@ -141,7 +141,7 @@ var getDeviceState = function getDeviceState(deviceURL) {
       body = JSON.parse(body);
     }
 
-    var devices = body.setup.devices;
+    var devices = body.devices;
 
     for (var i = 0; i < devices.length; i++) {
       if (devices[i].deviceURL === deviceURL) {
