@@ -4,13 +4,14 @@ var request = require('request');
 
 var Q = require('q');
 
-var TAHOMA_LINK_BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web';
+var TAHOMA_LINK_BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web'
+  + '/enduserAPI';
 
 var login = function login(username, password) {
   var deferred = Q.defer();
 
   request({
-    url: TAHOMA_LINK_BASE_URL + '/enduserAPI/login',
+    url: TAHOMA_LINK_BASE_URL + '/login',
     method: 'POST',
     form: {
       userId: username,
@@ -32,7 +33,7 @@ var getSetup = function getSetup(options) {
   var deferred = Q.defer();
 
   request({
-    url: TAHOMA_LINK_BASE_URL + '/externalAPI/json/getSetup',
+    url: TAHOMA_LINK_BASE_URL + '/setup',
     method: 'GET',
     jar: true,
   }, function(err, res, body) {
@@ -55,7 +56,7 @@ var execute = function execute(row, options) {
   var deferred = Q.defer();
 
   request({
-    url: TAHOMA_LINK_BASE_URL + '/enduserAPI/exec/apply',
+    url: TAHOMA_LINK_BASE_URL + '/exec/apply',
     method: 'POST',
     body: row,
     json: true,

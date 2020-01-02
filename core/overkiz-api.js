@@ -89,19 +89,18 @@ function OverkizApi(log, config) {
 
   var that = this;
   this.eventpoll = pollingtoevent(function(done) {
-    // now using the generic GetEvents instead of a registered listener
-    if (that.isLoggedIn) {
-      that.post({
-        url: that.urlForQuery('/externalAPI/json/getEvents'),
-        json: true,
-      }, function(error, data) {
-        done(error, data);
-      });
-    } else {
-      done(null, []);
-    }
+    // cannot use generic GetEvents as this is deprecated
+    // if (that.isLoggedIn) {
+    //   that.post({
+    //     url: that.urlForQuery('/externalAPI/json/getEvents'),
+    //     json: true,
+    //   }, function(error, data) {
+    //     done(error, data);
+    //   });
+    // } else {
+    //   done(null, []);
+    // }
 
-    /* old
     if (that.isLoggedIn && that.listenerId !== null && that.listenerId !== 0) {
       that.post({
         url: that.urlForQuery('/enduserAPI/events/'
@@ -113,7 +112,7 @@ function OverkizApi(log, config) {
     } else {
       done(null, []);
     }
-    */
+
   }, {
     longpolling: true,
     interval: (1000 * this.pollingPeriod),
@@ -272,8 +271,12 @@ OverkizApi.prototype = {
     };
     if (this.isLoggedIn) {
       myRequest(authCallback);
+    } else if (this.isLoggingIn) {
+      // wait two seconds and try again
+      setTimeout(that.requestWithLogin(myRequest, callback), 2000);
     } else {
       // var that = this;
+      that.isLoggingIn = true;
       that.listenerId = null;
       that.log.debug('Logging in to ' + this.service + ' server...');
       request.post({
@@ -285,6 +288,7 @@ OverkizApi.prototype = {
         json: true,
       }, function(err, response, json) {
         that.log.debug('RESP : ' + JSON.stringify(json));
+        that.isLoggingIn = false;
         if (err) {
           that.log.warn('Unable to login: ' + err);
           callback(err);
@@ -301,23 +305,6 @@ OverkizApi.prototype = {
         }
       });
     }
-  },
-
-  getEvents: function() {
-    var that = this;
-    this.log.debug('Getting events...');
-
-    this.post({
-      url: that.urlForQuery('/externalAPI/json/getEvents'),
-      json: true,
-    }, function(error, data) {
-      if (!error) {
-        that.log.debug('Received events ' + data);
-      } else {
-        that.log.error('Error while getting events ' + error
-          + ', data ' + JSON.stringify(data));
-      }
-    });
   },
 
   registerListener: function() {
