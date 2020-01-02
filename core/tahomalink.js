@@ -4,11 +4,51 @@ var request = require('request');
 
 var Q = require('q');
 
+var log = {
+  debug: function(s) {
+    console.log(new Date().toLocaleString() + ' - [debug]', s);
+  },
+  warn: function(s) {
+    console.log(new Date().toLocaleString() + ' - [warn]', s);
+  },
+  error: function(s) {
+    console.log(new Date().toLocaleString() + ' - [error]', s);
+  },
+  log: function(s) {
+    console.log(new Date().toLocaleString() + ' - [info]', s);
+  },
+  info: function(s) {
+    console.log(new Date().toLocaleString() + ' - [info]', s);
+  },
+};
+
+/* eslint-env es6 */
+const STATE_NOT_LOGGED_IN = 0;
+const STATE_LOGGING_IN = 1;
+const STATE_LOGGED_IN = 2;
+global.state = STATE_NOT_LOGGED_IN;
+
 var TAHOMA_LINK_BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web'
   + '/enduserAPI';
 
 var login = function login(username, password) {
   var deferred = Q.defer();
+
+  if (global.state === STATE_LOGGED_IN) {
+    deferred.resolve();
+    return deferred.promise;
+  } else if (global.state === STATE_LOGGING_IN) {
+    var waitingTime = Math.round(1000 + (1000 * Math.random()));
+    log.debug('another login attempt was called in parallel, '
+      + 'waiting ' + waitingTime + 'ms, then retrying...');
+    setTimeout(function() {
+      log.debug('retrying login after ' + waitingTime + 'ms...');
+      deferred.resolve(login(username, password));
+    }, waitingTime);
+    return deferred.promise;
+  }
+  global.state = STATE_LOGGING_IN;
+  log.debug('login at ' + TAHOMA_LINK_BASE_URL + '...');
 
   request({
     url: TAHOMA_LINK_BASE_URL + '/login',
@@ -20,8 +60,10 @@ var login = function login(username, password) {
     jar: true,
   }, function(err, res) {
     if (res.statusCode === 200) {
+      global.state = STATE_LOGGED_IN;
       deferred.resolve();
     } else {
+      global.state = STATE_NOT_LOGGED_IN;
       deferred.reject(err);
     }
   });
@@ -40,10 +82,21 @@ var getSetup = function getSetup(options) {
     if (res.statusCode === 200) {
       deferred.resolve(body);
     } else if (res.statusCode === 401 && options) {
-      setTimeout(function() {
-        deferred.resolve(login(options.username, options.password)
-          .then(getSetup(options)));
-      }, 1000);
+      if (typeof body !== 'object') {
+        body = JSON.parse(body);
+      }
+
+      if (body.errorCode !== 'RESOURCE_ACCESS_DENIED') {
+        // if it is a different error than wrong credentials
+        // e.g. AUTHENTICATION_ERROR indicates too many
+        // parallel logins
+        setTimeout(function() {
+          deferred.resolve(login(options.username, options.password)
+            .then(getSetup(options)));
+        }, 1000);
+      } else {
+        deferred.reject(body);
+      }
     } else {
       deferred.reject(err);
     }
