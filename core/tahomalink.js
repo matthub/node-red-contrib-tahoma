@@ -88,6 +88,7 @@ var getSetup = function getSetup(options) {
       if (typeof body !== 'object') {
         body = JSON.parse(body);
       }
+      log.debug('401, reason:', body);
 
       if (body.errorCode !== 'RESOURCE_ACCESS_DENIED') {
         // if it is a different error than wrong credentials
@@ -126,6 +127,7 @@ var execute = function execute(row, options) {
       if (typeof body !== 'object') {
         body = JSON.parse(body);
       }
+      log.debug('401, reason:', body);
 
       if (body.errorCode !== 'RESOURCE_ACCESS_DENIED') {
         // if it is a different error than wrong credentials
