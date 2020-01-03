@@ -93,11 +93,13 @@ var getSetup = function getSetup(options) {
         // if it is a different error than wrong credentials
         // e.g. AUTHENTICATION_ERROR indicates too many
         // parallel logins
+        // TODO what about an expired token?
         setTimeout(function() {
           deferred.resolve(login(options.username, options.password)
             .then(getSetup(options)));
         }, 1000);
       } else {
+        global.state = STATE_NOT_LOGGED_IN;
         deferred.reject(body);
       }
     } else {
@@ -120,11 +122,24 @@ var execute = function execute(row, options) {
   }, function(err, res, body) {
     if (res.statusCode === 200) {
       deferred.resolve(body);
-    } else if (res.statusCode === 401) {
-      setTimeout(function() {
-        deferred.resolve(login(options.username, options.password)
-          .then(execute(row, options)));
-      }, 1000);
+    } else if (res.statusCode === 401 && options) {
+      if (typeof body !== 'object') {
+        body = JSON.parse(body);
+      }
+
+      if (body.errorCode !== 'RESOURCE_ACCESS_DENIED') {
+        // if it is a different error than wrong credentials
+        // e.g. AUTHENTICATION_ERROR indicates too many
+        // parallel logins
+        // TODO what about an expired token?
+        setTimeout(function() {
+          deferred.resolve(login(options.username, options.password)
+            .then(execute(row, options)));
+        }, 1000);
+      } else {
+        global.state = STATE_NOT_LOGGED_IN;
+        deferred.reject(body);
+      }
     } else {
       deferred.reject(err);
     }
