@@ -5,12 +5,6 @@ var util = require('util');
 
 var Q = require('q');
 
-// TODO debug remove
-var j = request.jar();
-request.defaults({ jar: j });
-var requestCounter = 0;
-// TODO debug remove end
-
 var log = {
   component: '[tahomalink]',
   debug: function(s) {
@@ -83,13 +77,6 @@ var login = function login(username, password) {
 var getSetup = function getSetup(options) {
   var deferred = Q.defer();
 
-    // TODO debug remove
-  if (requestCounter > 10) {
-    j = request.jar();
-    requestCounter = 0;
-  }
-  // TODO debug remove end
-
   request({
     url: TAHOMA_LINK_BASE_URL + '/setup',
     method: 'GET',
@@ -107,8 +94,8 @@ var getSetup = function getSetup(options) {
         // if it is a different error than wrong credentials
         // e.g. AUTHENTICATION_ERROR indicates too many
         // parallel logins
-        // TODO what about an expired token?
         log.debug('401, resource access denied, retrying with login...');
+        global.state = STATE_NOT_LOGGED_IN;
         setTimeout(function() {
           deferred.resolve(login(options.username, options.password)
             .then(getSetup(options)));
@@ -130,11 +117,6 @@ var getSetup = function getSetup(options) {
 var execute = function execute(row, options) {
   var deferred = Q.defer();
 
-  // TODO debug remove
-  requestCounter++;
-  log.debug("requestCounter: " + requestCounter);
-  // TODO debug remove end
-
   request({
     url: TAHOMA_LINK_BASE_URL + '/exec/apply',
     method: 'POST',
@@ -145,16 +127,17 @@ var execute = function execute(row, options) {
     if (res.statusCode === 200) {
       deferred.resolve(body);
     } else if (res.statusCode === 401 && options) {
+      log.debug('401, reason:' + JSON.stringify(body));
       if (typeof body !== 'object') {
         body = JSON.parse(body);
       }
-      log.debug('401, reason:', body);
 
-      if (body.errorCode !== 'RESOURCE_ACCESS_DENIED') {
+      if (body.errorCode === 'RESOURCE_ACCESS_DENIED') {
         // if it is a different error than wrong credentials
         // e.g. AUTHENTICATION_ERROR indicates too many
         // parallel logins
-        // TODO what about an expired token?
+        log.debug('401, resource access denied, retrying with login...');
+        global.state = STATE_NOT_LOGGED_IN;
         setTimeout(function() {
           deferred.resolve(login(options.username, options.password)
             .then(execute(row, options)));
