@@ -89,7 +89,8 @@ module.exports = function(RED) {
             return;
           }
 
-          tahomalink.continueWhenFinished(node.device, expectedState)
+          tahomalink.continueWhenFinished(node.device, expectedState,
+            configNode)
             .then(function() {
               node.status({
                 fill: 'green',
@@ -173,7 +174,7 @@ module.exports = function(RED) {
     node.on('input', function(msg) {
       tahomalink.login(configNode.username, configNode.password)
         .then(function() {
-          tahomalink.getDeviceState(node.device)
+          tahomalink.getDeviceState(node.device, configNode)
             .then(function(data) {
               msg.payload = data;
               node.send(msg);

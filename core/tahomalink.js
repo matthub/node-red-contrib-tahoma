@@ -60,7 +60,7 @@ var login = function login(username, password) {
       userId: username,
       userPassword: password,
     },
-    jar: true,
+    jar: false,
   }, function(err, res) {
     if (res.statusCode === 200) {
       global.state = STATE_LOGGED_IN;
@@ -85,6 +85,7 @@ var getSetup = function getSetup(options) {
     if (res.statusCode === 200) {
       deferred.resolve(body);
     } else if (res.statusCode === 401 && options) {
+      log.debug('401, reason: ' + JSON.stringify(body));
       if (typeof body !== 'object') {
         body = JSON.parse(body);
       }
@@ -150,10 +151,10 @@ var execute = function execute(row, options) {
   return deferred.promise;
 };
 
-var getDeviceState = function getDeviceState(deviceURL) {
+var getDeviceState = function getDeviceState(deviceURL, options) {
   var deferred = Q.defer();
 
-  getSetup().then(function(body) {
+  getSetup(options).then(function(body) {
     if (typeof body !== 'object') {
       body = JSON.parse(body);
     }
@@ -198,14 +199,16 @@ var getDeviceState = function getDeviceState(deviceURL) {
 
   return deferred.promise;
 };
+
 var isFirstLaunch = true;
 var continueWhenFinished = function continueWhenFinished(
   deviceURL,
-  expectedState
+  expectedState,
+  options
 ) {
   return Q.Promise(function(resolve) {
     setTimeout(function() {
-      getDeviceState(deviceURL).then(function(state) {
+      getDeviceState(deviceURL, options).then(function(state) {
         // - Checking on the position seems enough for now.
         if (state.position === expectedState.position) {
           resolve(true);
@@ -218,7 +221,8 @@ var continueWhenFinished = function continueWhenFinished(
     isFirstLaunch = false;
   })
     .then(function(finished) {
-      return finished ? true : continueWhenFinished(deviceURL, expectedState);
+      return finished ? true : continueWhenFinished(deviceURL, expectedState,
+        options);
     });
 };
 
