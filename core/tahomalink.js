@@ -5,22 +5,57 @@ var util = require('util');
 
 var Q = require('q');
 
+// log levels are 0=disabled, 1=error, 2=warning, 3=debug
+const LogLevels = {
+  DISABLED: 0,
+  ERROR: 1,
+  WARNING: 2,
+  INFO: 3,
+  DEBUG: 4,
+};
+
+// trying to get log level from the environment
+const REQUESTED_LOG_LEVEL = process.env.TAHOMA_LOG;
+var LOG_LEVEL = LogLevels.INFO;
+if (REQUESTED_LOG_LEVEL === 'ERROR') {
+  LOG_LEVEL = LogLevels.ERROR;
+} else if (REQUESTED_LOG_LEVEL === 'WARNING') {
+  LOG_LEVEL = LogLevels.WARNING;
+} else if (REQUESTED_LOG_LEVEL === 'INFO') {
+  LOG_LEVEL = LogLevels.INFO;
+} else if (REQUESTED_LOG_LEVEL === 'DEBUG') {
+  LOG_LEVEL = LogLevels.DEBUG;
+} else {
+  LOG_LEVEL = isNaN(parseInt(REQUESTED_LOG_LEVEL, 10))
+    ? LogLevels.INFO : parseInt(REQUESTED_LOG_LEVEL, 10);
+}
+
 var log = {
   component: '[tahomalink]',
   debug: function(s) {
-    util.log('[debug] ' + log.component, s);
+    if (LOG_LEVEL >= LogLevels.DEBUG) {
+      util.log('[debug] ' + log.component, s);
+    }
   },
   warn: function(s) {
-    util.log('[warn] ' + log.component, s);
+    if (LOG_LEVEL >= LogLevels.WARNING) {
+      util.log('[warn] ' + log.component, s);
+    }
   },
   error: function(s) {
-    util.log('[error] ' + log.component, s);
+    if (LOG_LEVEL >= LogLevels.ERROR) {
+      util.log('[error] ' + log.component, s);
+    }
   },
   log: function(s) {
-    util.log('[info] ' + log.component, s);
+    if (LOG_LEVEL >= LogLevels.INFO) {
+      util.log('[info] ' + log.component, s);
+    }
   },
   info: function(s) {
-    util.log('[info] ' + log.component, s);
+    if (LOG_LEVEL >= LogLevels.INFO) {
+      util.log('[info] ' + log.component, s);
+    }
   },
 };
 
@@ -29,6 +64,9 @@ const STATE_NOT_LOGGED_IN = 0;
 const STATE_LOGGING_IN = 1;
 const STATE_LOGGED_IN = 2;
 global.state = STATE_NOT_LOGGED_IN;
+
+const MAX_LOGIN_TRIES = 10;
+global.loginTries = 0;
 
 var TAHOMA_LINK_BASE_URL = 'https://www.tahomalink.com/enduser-mobile-web'
   + '/enduserAPI';
@@ -39,6 +77,11 @@ var login = function login(username, password) {
   if (global.state === STATE_LOGGED_IN) {
     deferred.resolve();
     return deferred.promise;
+  } else if (username == null || username === ''
+      || password == null || password === '') {
+    var err = 'no username or password given, cannot login!';
+    log.warn(err);
+    deferred.reject(err);
   } else if (global.state === STATE_LOGGING_IN) {
     var waitingTime = Math.round(1000 + (1000 * Math.random()));
     log.debug('another login attempt was called in parallel, '
@@ -83,27 +126,38 @@ var getSetup = function getSetup(options) {
     jar: true,
   }, function(err, res, body) {
     if (res.statusCode === 200) {
+      log.debug('getSetup: ' + JSON.stringify(body));
       deferred.resolve(body);
+      global.loginTries = 0;
     } else if (res.statusCode === 401 && options) {
       log.debug('401, reason: ' + JSON.stringify(body));
       if (typeof body !== 'object') {
         body = JSON.parse(body);
       }
 
+      global.state = STATE_NOT_LOGGED_IN;
       if (body.errorCode === 'RESOURCE_ACCESS_DENIED') {
-        // if it is a different error than wrong credentials
+        // this reason can be wrong credentials as well as
+        // token timeout
+        if (global.loginTries > MAX_LOGIN_TRIES) {
+          log.warn('401, rejecting number of max login tries reached!');
+          // resetting counter to allow further retries in future
+          global.loginTries = 0;
+          deferred.reject(body);
+        } else {
+          log.debug('401, resource access denied, retrying ('
+            + global.loginTries + ') with login...');
+          global.loginTries = global.loginTries + 1;
+          setTimeout(function() {
+            deferred.resolve(login(options.username, options.password)
+              .then(getSetup(options)));
+          }, 1000);
+        }
+      } else {
         // e.g. AUTHENTICATION_ERROR indicates too many
         // parallel logins
-        log.debug('401, resource access denied, retrying with login...');
-        global.state = STATE_NOT_LOGGED_IN;
-        setTimeout(function() {
-          deferred.resolve(login(options.username, options.password)
-            .then(getSetup(options)));
-        }, 1000);
-      } else {
-        log.debug('401, rejecting because of given reason: '
+        log.warn('401, rejecting because of given reason: '
           + JSON.stringify(body));
-        global.state = STATE_NOT_LOGGED_IN;
         deferred.reject(body);
       }
     } else {
@@ -132,18 +186,29 @@ var execute = function execute(row, options) {
         body = JSON.parse(body);
       }
 
+      global.state = STATE_NOT_LOGGED_IN;
       if (body.errorCode === 'RESOURCE_ACCESS_DENIED') {
-        // if it is a different error than wrong credentials
+        // this reason can be wrong credentials as well as
+        // token timeout
+        if (global.loginTries > MAX_LOGIN_TRIES) {
+          log.warn('401, rejecting number of max login tries reached!');
+          // resetting counter to allow further retries in future
+          global.loginTries = 0;
+          deferred.reject(body);
+        } else {
+          log.debug('401, resource access denied, retrying ('
+            + global.loginTries + ') with login...');
+          global.loginTries = global.loginTries + 1;
+          setTimeout(function() {
+            deferred.resolve(login(options.username, options.password)
+              .then(execute(row, options)));
+          }, 1000);
+        }
+      } else {
         // e.g. AUTHENTICATION_ERROR indicates too many
         // parallel logins
-        log.debug('401, resource access denied, retrying with login...');
-        global.state = STATE_NOT_LOGGED_IN;
-        setTimeout(function() {
-          deferred.resolve(login(options.username, options.password)
-            .then(execute(row, options)));
-        }, 1000);
-      } else {
-        global.state = STATE_NOT_LOGGED_IN;
+        log.warn('401, rejecting because of given reason: '
+          + JSON.stringify(body));
         deferred.reject(body);
       }
     } else {

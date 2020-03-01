@@ -1,7 +1,6 @@
 'use strict';
 
 var tahomalink = require('./core/tahomalink');
-// var Api = require('./core/overkiz-api').Api;
 
 module.exports = function(RED) {
   function TahomaNode(config) {
@@ -120,56 +119,6 @@ module.exports = function(RED) {
 
     var node = this;
     var configNode = RED.nodes.getNode(node.tahomabox);
-
-    // in parallel try out a different api
-    /* eslint-env es6 */
-
-    /*
-    var log = tahomalink.log;
-    var apiConfig = {
-      user: configNode.username,
-      password: configNode.password,
-      alwaysPoll: true,
-    };
-    var listener = {
-      onStatesChange: function(deviceURL, states) {
-        log.debug(deviceURL + ': ' + JSON.stringify(states));
-      },
-    };
-
-    var timeout = 2000;
-    var api = new Api(log, apiConfig);
-    api.setDeviceStateChangedEventListener(listener);
-
-    var getDevicesCallback = function(error, data) {
-      if (!error) {
-        log.info(node.device + ', ' + data.length + ' device(s) found');
-        // TODO debug only
-        // for (var device of data) {
-        //  console.log('device', device);
-        // }
-
-        // filter for device
-        for (var device of data) {
-          if (device === node.device) {
-            log.debug('would send message for device '
-              + node.device + ', ' + device);
-          }
-        }
-      } else {
-        // handle too many requests
-        if (error != null && error.indexOf('Too many requests') > -1) {
-          // adding some random timeout value before retrying
-          timeout = timeout + Math.floor(Math.random() * Math.floor(1000));
-          log.warn('retrying get devices in ' + timeout + 'ms...');
-          setTimeout(api.getDevices, timeout, getDevicesCallback);
-        } else {
-          log.error('could not get devices: ' + error);
-        }
-      }
-    };
-    api.getDevices(getDevicesCallback);
-    */
 
     node.on('input', function(msg) {
       tahomalink.login(configNode.username, configNode.password)

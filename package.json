@@ -32,7 +32,6 @@
         }
     },
     "dependencies": {
-        "polling-to-event": "^2.1.0",
         "q": "1.5.1",
         "request": "2.87.0",
         "util": "^0.12.1"
